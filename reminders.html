@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>每日记录</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#007AFF">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="每日记录">
+  <link rel="apple-touch-icon" href="icons/icon-120.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+  <link rel="apple-touch-startup-image" href="icons/icon-1024.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg: #F2F2F7;
+      --card: #FFFFFF;
+      --text-primary: #1C1C1E;
+      --text-secondary: #8E8E93;
+      --text-done: #BDBDC2;
+      --accent: #007AFF;
+      --accent-fill: #34C759;
+      --accent-light: #E5F2FF;
+      --border: #E5E5EA;
+      --shadow: 0 2px 16px rgba(0,0,0,0.06);
+      --radius: 14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px 100px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 540px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding: 0 4px;
+    }
+
+    .header-top {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .header h1 {
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+
+    .header .date-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* Share button */
+    .share-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card);
+      border: 0.5px solid var(--border);
+      border-radius: 9px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .share-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .share-btn.copied {
+      background: #E8F8EC;
+      border-color: var(--accent-fill);
+      color: var(--accent-fill);
+    }
+
+    .share-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* Date navigation */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .date-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 0.5px solid var(--border);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .date-nav-btn:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    .date-nav-btn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-secondary);
+    }
+
+    .date-nav-btn:hover svg {
+      color: var(--accent);
+    }
+
+    .date-nav-center {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .today-tag {
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--accent);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* List container */
+    .list-container {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 0.5px solid var(--border);
+    }
+
+    /* Add task input */
+    .add-task-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      gap: 12px;
+      border-bottom: 0.5px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .add-task-row:focus-within {
+      background: #F9F9FB;
+    }
+
+    .add-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .add-icon::after {
+      content: '+';
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .add-task-row:focus-within .add-icon {
+      background: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .add-task-row:focus-within .add-icon::after {
+      color: white;
+      transform: rotate(45deg);
+      font-size: 18px;
+    }
+
+    #taskInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 17px;
+      color: var(--text-primary);
+      background: transparent;
+      font-family: inherit;
+      font-weight: 400;
+      line-height: 1.4;
+    }
+
+    #taskInput::placeholder {
+      color: #C7C7CC;
+    }
+
+    /* Task item */
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 15px 20px;
+      gap: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 0.5px solid var(--border);
+      position: relative;
+    }
+
+    .task-item:last-child {
+      border-bottom: none;
+    }
+
+    .task-item:hover {
+      background: #F9F9FB;
+    }
+
+    /* Checkbox - hollow circle for active */
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #C7C7CC;
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: transparent;
+    }
+
+    .checkbox:hover {
+      border-color: var(--accent);
+    }
+
+    /* Checkbox - filled circle for done */
+    .task-item.done .checkbox {
+      background: var(--accent-fill);
+      border-color: var(--accent-fill);
+      box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.15);
+    }
+
+    .task-item.done .checkbox::after {
+      content: '';
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid white;
+      border-bottom: 2px solid white;
+      transform: rotate(-45deg) scale(1);
+      position: relative;
+      top: -1px;
+    }
+
+    /* Unchecked checkmark animation */
+    .checkbox-inner {
+      width: 10px;
+      height: 6px;
+      border-left: 2px solid transparent;
+      border-bottom: 2px solid transparent;
+      transform: rotate(-45deg) scale(0);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      top: -2px;
+    }
+
+    .task-item:not(.done) .checkbox:hover .checkbox-inner {
+      border-color: var(--accent);
+      transform: rotate(-45deg) scale(1);
+    }
+
+    .task-item.done .checkbox-inner {
+      display: none;
+    }
+
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-text {
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      transition: color 0.3s;
+      word-break: break-word;
+    }
+
+    .task-time {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .task-item:hover .task-time {
+      opacity: 1;
+    }
+
+    /* Done state: gray text */
+    .task-item.done .task-text {
+      color: var(--text-done);
+    }
+
+    .task-item.done .task-time {
+      opacity: 0.5;
+    }
+
+    /* Delete button */
+    .task-delete {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s;
+      flex-shrink: 0;
+      margin-top: -2px;
+    }
+
+    .task-item:hover .task-delete {
+      opacity: 1;
+    }
+
+    .task-delete:hover {
+      background: #FFEBEB;
+    }
+
+    .task-delete:hover svg line {
+      stroke: var(--danger);
+    }
+
+    .task-delete svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Progress bar */
+    .progress-section {
+      padding: 14px 20px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .progress-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar {
+      height: 5px;
+      background: #E5E5EA;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-fill), #30D158);
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-btn {
+      background: none;
+      border: none;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+
+    .footer-btn:hover {
+      background: rgba(0,0,0,0.05);
+      color: var(--text-primary);
+    }
+
+    .footer-btn.danger:hover {
+      color: var(--danger);
+      background: #FFEBEB;
+    }
+
+    .footer-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(28, 28, 30, 0.9);
+      color: white;
+      font-size: 14px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 1000;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .undo-btn {
+      color: #5AC8FA;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Animations */
+    @keyframes taskEnter {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes taskDone {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .task-item.entering {
+      animation: taskEnter 0.25s ease forwards;
+    }
+
+    .task-item.check-anim .checkbox {
+      animation: taskDone 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      body { padding: 20px 0 80px; }
+      .app { max-width: 100%; }
+      .list-container { border-radius: 0; border-left: none; border-right: none; box-shadow: none; }
+      .header { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <h1>每日记录</h1>
+      <span class="date-label" id="dateLabel"></span>
+    </div>
+    <button class="share-btn" id="shareBtn" onclick="shareSession()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"></circle>
+        <circle cx="6" cy="12" r="3"></circle>
+        <circle cx="18" cy="19" r="3"></circle>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+      </svg>
+      <span id="shareBtnText">分享会话</span>
+    </button>
+  </div>
+
+  <div class="date-nav">
+    <button class="date-nav-btn" onclick="navigateDate(-1)" title="前一天">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <div class="date-nav-center">
+      <span id="navDateText"></span>
+      <span class="today-tag" id="todayTag" style="display:none;">今天</span>
+    </div>
+    <button class="date-nav-btn" onclick="navigateDate(1)" title="后一天">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <div class="list-container">
+    <div class="progress-section" id="progressSection">
+      <div class="progress-header">
+        <span class="progress-label">今日进度</span>
+        <span class="progress-count" id="progressCount">0 / 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="add-task-row">
+      <div class="add-icon"></div>
+      <input id="taskInput" type="text" placeholder="记录今天做了什么…" autocomplete="off" autofocus>
+    </div>
+
+    <div id="tasksContainer"></div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="icon">📝</div>
+      <p>今天的记录为空<br><span style="font-size:13px;opacity:0.6">在上方输入今天做的事情</span></p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="footer-btn" id="clearDoneBtn" style="display:none;" onclick="clearDone()">清除已完成</button>
+    <span class="footer-info" id="footerInfo"></span>
+    <button class="footer-btn danger" onclick="clearAll()">清空全部</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  // Session share URL (from QClaw)
+  const SESSION_SHARE_URL = 'https://qclaw.qq.com/session-share?share_id=9xO8ANQtBUM4';
+
+  // State
+  let allTasks = {};  // keyed by date string "YYYY-MM-DD"
+  let currentDate = new Date();
+  let lastRemoved = null;
+  let toastTimer = null;
+
+  // Date helpers
+  function dateToKey(d) {
+    const dt = new Date(d);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+
+  function isToday(d) {
+    return dateToKey(d) === dateToKey(new Date());
+  }
+
+  function formatDisplayDate(d) {
+    const dt = new Date(d);
+    if (isToday(d)) return '今天';
+    const month = dt.getMonth() + 1;
+    const day = dt.getDate();
+    const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][dt.getDay()];
+    return `${month}月${day}日 ${weekday}`;
+  }
+
+  function formatFullDate(d) {
+    const dt = new Date(d);
+    return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 ${['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()]}`;
+  }
+
+  // Storage
+  function save() {
+    localStorage.setItem('daily_diary_v2', JSON.stringify(allTasks));
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem('daily_diary_v2');
+      if (raw) allTasks = JSON.parse(raw);
+    } catch(e) { allTasks = {}; }
+  }
+
+  function getTasks() {
+    const key = dateToKey(currentDate);
+    if (!allTasks[key]) allTasks[key] = [];
+    return allTasks[key];
+  }
+
+  // Share session
+  window.shareSession = async function() {
+    const btn = document.getElementById('shareBtn');
+    const btnText = document.getElementById('shareBtnText');
+    try {
+      await navigator.clipboard.writeText(SESSION_SHARE_URL);
+      btn.classList.add('copied');
+      btnText.textContent = '已复制链接';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btnText.textContent = '分享会话';
+      }, 2500);
+    } catch(e) {
+      // Fallback: open in new tab
+      window.open(SESSION_SHARE_URL, '_blank');
+    }
+  };
+
+  // Date navigation
+  window.navigateDate = function(delta) {
+    currentDate.setDate(currentDate.getDate() + delta);
+    render();
+    document.getElementById('taskInput').focus();
+  };
+
+  // Render
+  function render() {
+    const tasks = getTasks();
+    const key = dateToKey(currentDate);
+    const today = isToday(currentDate);
+
+    // Update date labels
+    document.getElementById('dateLabel').textContent = formatFullDate(currentDate);
+    document.getElementById('navDateText').textContent = formatDisplayDate(currentDate);
+    document.getElementById('todayTag').style.display = today ? '' : 'none';
+
+    // Progress
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    document.getElementById('progressCount').textContent = `${done} / ${total}`;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressSection').style.display = total > 0 ? '' : 'none';
+
+    // Footer
+    const clearBtn = document.getElementById('clearDoneBtn');
+    const footerInfo = document.getElementById('footerInfo');
+    if (done > 0) {
+      clearBtn.style.display = '';
+      footerInfo.textContent = `${done} 项已完成`;
+    } else {
+      clearBtn.style.display = 'none';
+      footerInfo.textContent = total > 0 ? `${total} 项待完成` : '';
+    }
+
+    // Tasks
+    const container = document.getElementById('tasksContainer');
+    container.innerHTML = '';
+
+    if (tasks.length === 0) {
+      document.getElementById('emptyState').style.display = '';
+      return;
+    }
+    document.getElementById('emptyState').style.display = 'none';
+
+    // Active first, then done (sorted by creation time)
+    const sorted = [...tasks].sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return new Date(b.created) - new Date(a.created);
+    });
+
+    sorted.forEach((task, i) => {
+      const div = document.createElement('div');
+      div.className = 'task-item' + (task.done ? ' done' : '') + (i === 0 ? ' entering' : '');
+      div.dataset.id = task.id;
+
+      const cb = document.createElement('div');
+      cb.className = 'checkbox';
+      cb.innerHTML = '<div class="checkbox-inner"></div>';
+      cb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleTask(task.id);
+      });
+
+      const body = document.createElement('div');
+      body.className = 'task-body';
+
+      const text = document.createElement('div');
+      text.className = 'task-text';
+      text.textContent = task.text;
+
+      const time = document.createElement('div');
+      time.className = 'task-time';
+      const taskDate = new Date(task.created);
+      time.textContent = `${String(taskDate.getHours()).padStart(2,'0')}:${String(taskDate.getMinutes()).padStart(2,'0')}`;
+
+      body.appendChild(text);
+      body.appendChild(time);
+
+      const del = document.createElement('button');
+      del.className = 'task-delete';
+      del.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteTask(task.id);
+      });
+
+      div.appendChild(cb);
+      div.appendChild(body);
+      div.appendChild(del);
+      container.appendChild(div);
+
+      if (i === 0) setTimeout(() => div.classList.remove('entering'), 250);
+    });
+  }
+
+  function toggleTask(id) {
+    const tasks = getTasks();
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    task.done = !task.done;
+    task.completedAt = task.done ? new Date().toISOString() : null;
+
+    // Trigger check animation
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) {
+      el.classList.add('check-anim');
+      setTimeout(() => el.classList.remove('check-anim'), 350);
+    }
+
+    save();
+
+    // Delay render slightly for animation feel
+    setTimeout(() => render(), 50);
+  }
+
+  function addTask(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const tasks = getTasks();
+    const task = {
+      id: Date.now().toString(),
+      text: trimmed,
+      done: false,
+      created: new Date().toISOString(),
+      completedAt: null
+    };
+    tasks.push(task);
+    save();
+    render();
+    document.getElementById('taskInput').value = '';
+    document.getElementById('taskInput').focus();
+  }
+
+  function deleteTask(id) {
+    const tasks = getTasks();
+    const idx = tasks.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const [task] = tasks.splice(idx, 1);
+    save();
+    render();
+    showToast(`"${task.text.substring(0, 15)}${task.text.length > 15 ? '…' : ''}" 已删除`, true);
+    lastRemoved = { task, idx };
+  }
+
+  function clearDone() {
+    const tasks = getTasks();
+    const done = tasks.filter(t => t.done);
+    if (done.length === 0) return;
+    const remaining = tasks.filter(t => !t.done);
+    allTasks[dateToKey(currentDate)] = remaining;
+    save();
+    render();
+    showToast(`已清除 ${done.length} 项已完成`);
+  }
+
+  function clearAll() {
+    const tasks = getTasks();
+    if (tasks.length === 0) return;
+    if (!confirm(`确定要清空今日全部 ${tasks.length} 条记录吗？`)) return;
+    allTasks[dateToKey(currentDate)] = [];
+    save();
+    render();
+    showToast('已清空今日记录');
+  }
+
+  function showToast(msg, withUndo) {
+    const toast = document.getElementById('toast');
+    toast.innerHTML = msg + (withUndo ? '<span class="undo-btn" onclick="undoDelete()"> 撤销</span>' : '');
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  window.undoDelete = function() {
+    if (!lastRemoved) return;
+    const { task, idx } = lastRemoved;
+    const tasks = getTasks();
+    tasks.splice(idx, 0, task);
+    lastRemoved = null;
+    save();
+    render();
+    document.getElementById('toast').classList.remove('show');
+    document.getElementById('taskInput').focus();
+  };
+
+  // Expose
+  window.toggleTask = toggleTask;
+  window.deleteTask = deleteTask;
+  window.clearDone = clearDone;
+  window.clearAll = clearAll;
+  window.navigateDate = navigateDate;
+  window.shareSession = window.shareSession;
+  window.undoDelete = window.undoDelete;
+
+  // Init
+  load();
+  render();
+
+  // Keyboard
+  document.getElementById('taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask(e.target.value);
+  });
+
+  // PWA: Register Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        console.log('SW registered:', reg.scope);
+      }).catch((err) => {
+        console.warn('SW registration failed:', err);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
