@@ -471,6 +471,41 @@
       letter-spacing: 0.3px;
     }
 
+    .date-add-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    .date-title:hover .date-add-btn {
+      opacity: 1;
+    }
+
+    .date-add-btn:hover {
+      background: var(--accent-light);
+      transform: scale(1.1);
+    }
+
+    .date-add-btn:active {
+      transform: scale(0.95);
+    }
+
+    .date-add-btn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+    }
+
+
     .date-progress {
       display: flex;
       align-items: center;
@@ -1192,6 +1227,12 @@
         <div class="date-header">
           <div class="date-title">
             ${formatDisplayDate(d)}${isTodayDate ? '<span class="today-tag">今天</span>' : ''}
+            <button class="date-add-btn" onclick="promptAddTask('${key}')" title="添加事项">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
           </div>
           <div class="date-progress">
             <span class="date-progress-text">${done}/${tasks.length}</span>
@@ -1282,6 +1323,29 @@
 
     // Scroll to today's section
     setTimeout(() => scrollToDate(key), 100);
+  };
+
+
+
+  // Add task to specific date
+  window.promptAddTask = function(dateKey) {
+    const text = prompt('添加事项：');
+    if (!text || !text.trim()) return;
+    
+    if (!allTasks[dateKey]) allTasks[dateKey] = [];
+    const task = {
+      id: Date.now().toString(),
+      text: text.trim(),
+      done: false,
+      created: new Date().toISOString(),
+      completedAt: null
+    };
+    allTasks[dateKey].push(task);
+    save();
+    render();
+    
+    // Scroll to that section
+    setTimeout(() => scrollToDate(dateKey), 100);
   };
 
   window.deleteTask = function(dateKey, id) {
