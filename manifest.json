@@ -1,0 +1,35 @@
+{
+  "name": "每日记录",
+  "short_name": "每日记录",
+  "description": "苹果风格每日备忘录，完成事项自动沉底，数据本地持久化",
+  "start_url": "/reminders.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F2F7",
+  "theme_color": "#007AFF",
+  "lang": "zh-CN",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-72.png",   "sizes": "72x72",   "type": "image/png" },
+    { "src": "icons/icon-96.png",   "sizes": "96x96",   "type": "image/png" },
+    { "src": "icons/icon-120.png",  "sizes": "120x120", "type": "image/png" },
+    { "src": "icons/icon-128.png",  "sizes": "128x128", "type": "image/png" },
+    { "src": "icons/icon-144.png",  "sizes": "144x144", "type": "image/png" },
+    { "src": "icons/icon-152.png",  "sizes": "152x152", "type": "image/png" },
+    { "src": "icons/icon-180.png",  "sizes": "180x180", "type": "image/png" },
+    { "src": "icons/icon-192.png",  "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-256.png",  "sizes": "256x256", "type": "image/png" },
+    { "src": "icons/icon-384.png",  "sizes": "384x384", "type": "image/png" },
+    { "src": "icons/icon-512.png",  "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "今天",
+      "short_name": "今天",
+      "description": "查看今日记录",
+      "url": "/reminders.html?date=today"
+    }
+  ]
+}
